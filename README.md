@@ -15,7 +15,7 @@ A Node.js project for executing Luau scripts, designed for use with Roblox devel
 5. Install roblox-luau-execute via npm:
 
    ```sh
-   npm install roblox-luau-execute
+   npm install rbxluau
    ```
 6. Start using the package in your Node.js projects!
 
