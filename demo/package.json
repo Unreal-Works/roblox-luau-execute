@@ -1,0 +1,11 @@
+{
+    "scripts": {
+        "build": "rbxtsc && npx rojo build -o out/place.rbxl"
+    },
+    "devDependencies": {
+        "@rbxts/compiler-types": "^3.0.0-types.0",
+        "@rbxts/types": "^1.0.813",
+        "roblox-ts": "^3.0.0",
+        "typescript": "~5.5.3"
+    }
+}
