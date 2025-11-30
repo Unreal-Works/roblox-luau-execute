@@ -56,12 +56,9 @@ async function getTaskLogs({ executionKey, taskPath }) {
 }
 
 function analyzeTaskLogs(logs) {
-    let failedTests = 0;
-    let totalTests = 0;
-
     const groups = logs?.luauExecutionSessionTaskLogs;
     if (!Array.isArray(groups)) {
-        return { failedTests, totalTests };
+        return;
     }
 
     for (const entry of groups) {
@@ -70,35 +67,9 @@ function analyzeTaskLogs(logs) {
         }
 
         for (const raw of entry.messages) {
-            const message = typeof raw === "string" ? raw : JSON.stringify(raw);
-            console.log(message);
-
-            const testResultMatch = message.match(/(\d+)\s+passed,\s+(\d+)\s+failed,\s+(\d+)\s+skipped/);
-            if (testResultMatch) {
-                const passed = Number.parseInt(testResultMatch[1], 10);
-                const failed = Number.parseInt(testResultMatch[2], 10);
-                const skipped = Number.parseInt(testResultMatch[3], 10);
-
-                if (Number.isFinite(passed) && Number.isFinite(failed) && Number.isFinite(skipped)) {
-                    totalTests += passed + failed + skipped;
-                }
-
-                if (Number.isFinite(failed)) {
-                    failedTests += failed;
-                }
-            }
-
-            const suiteSummaryMatch = message.match(/Test Suites:\s+(\d+)\s+failed/);
-            if (suiteSummaryMatch) {
-                const failed = Number.parseInt(suiteSummaryMatch[1], 10);
-                if (Number.isFinite(failed)) {
-                    failedTests += failed;
-                }
-            }
+            console.log(typeof raw === "string" ? raw : JSON.stringify(raw));
         }
     }
-
-    return { failedTests, totalTests };
 }
 
 export async function runCloudLuau({ executionKey, universeId, placeId, placeVersion, scriptContents }) {
@@ -126,14 +97,9 @@ export async function runCloudLuau({ executionKey, universeId, placeId, placeVer
         taskPath: task.path,
     });
 
-    const { failedTests } = analyzeTaskLogs(logs);
+    analyzeTaskLogs(logs);
 
     if (completedTask.state === "COMPLETE") {
-        if (failedTests > 0) {
-            console.error(`Luau task completed but ${failedTests} test(s) failed`);
-            return false;
-        }
-
         return true;
     }
 

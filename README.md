@@ -27,7 +27,7 @@ A Node.js project for executing Luau scripts, designed for use with Roblox devel
 
 ### Prerequisites
 - Node.js (v16 or later recommended)
-- npm
+- Roblox Studio (optional, for local execution)
 
 ### Installation
 1. Clone the repository:

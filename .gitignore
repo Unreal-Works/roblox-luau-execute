@@ -1,3 +1,6 @@
 .env
 /node_modules
 .robloxluauexecute
+plugin/plugin.rbxm
+plugin/empty_place.rbxl
+*.lock

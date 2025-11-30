@@ -24,5 +24,12 @@ for i, v in pairs(workspace:GetChildren()) do
     if not v:IsA("Part") then
         continue
     end
-    print(v.Name .. " has height " .. v.Size.Y)
+
+    local message = v.Name .. " has height " .. v.Size.Y
+
+    if v.Size.Y % 2 == 0 then
+        print(message)
+    else
+        warn(message)
+    end
 end

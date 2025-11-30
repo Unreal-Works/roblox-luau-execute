@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "johnnymorganz.stylua",
+        "johnnymorganz.luau-lsp",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint"
+    ]
+}

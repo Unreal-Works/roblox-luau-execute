@@ -15,7 +15,10 @@
     },
     "dependencies": {
         "axios": "^1.13.2",
+        "chalk": "^5.6.2",
         "commander": "^14.0.2",
-        "dotenv": "^17.2.3"
+        "dotenv": "^17.2.3",
+        "rbx-lune": "^1.0.0",
+        "ws": "^8.18.0"
     }
 }

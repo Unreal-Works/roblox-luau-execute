@@ -9,10 +9,11 @@ dotenv.config({ quiet: true });
 const program = new Command();
 
 program
-    .name("roblox-luau-execute")
-    .description("Run scripts in Roblox Luau")
+    .name("rbxluau")
+    .description("All-in-one toolkit to seamlessly execute Roblox Luau")
     .option("-s, --script <path>", "Path to the Luau script file if not provided inline")
     .option("-p, --place <path>", "Path to an optional Roblox place file to execute the script in")
+    .option("-l, --local", "Run the Luau script on a local Roblox Studio instance")
     .argument("[luau]", "Inline Luau code to execute if --script is not provided")
     .action(executeLuau);
 
