@@ -269,8 +269,8 @@ export class PlaceRunner {
                         window.setBounds({
                             x: -2000,
                             y: 0,
-                            width: 5,
-                            height: 5,
+                            width: window.getBounds().width,
+                            height: window.getBounds().height,
                         });
                         break;
                     }

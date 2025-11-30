@@ -14,13 +14,14 @@ export async function executeLuau(luau, options) {
         process.exit(1);
     }
 
+    const { ROBLOSECURITY } = process.env;
+
     // Local mode doesn't require ROBLOSECURITY
-    if (options.local) {
+    if (options.local || !ROBLOSECURITY) {
         const code = await new PlaceRunner({ ...options, scriptContents }).run();
         process.exit(code);
     }
 
-    const { ROBLOSECURITY } = process.env;
     if (!ROBLOSECURITY) {
         console.error("ROBLOSECURITY environment variable is not set.");
         process.exit(1);
