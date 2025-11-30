@@ -4,6 +4,20 @@ A Node.js project for executing Luau scripts, designed for use with Roblox devel
 
 ## Setup
 
+Local Execution:
+1. Install roblox-luau-execute via npm:
+
+   ```sh
+   npm install rbxluau
+   ```
+2. Ensure you have [Roblox Studio](https://create.roblox.com/docs/tutorials/curriculums/studio/install-studio) installed and opened at least once on your local machine.
+3. Start using the package in your Node.js projects!
+
+   ```sh
+   npx rbxluau "print('Hello, Roblox!')"
+   ```
+
+Cloud Execution (CI/CD Pipelines, etc.):
 1. [Create and log into a throwaway Roblox account to use for script execution.](https://www.roblox.com/) Ensure this account has no value and is not linked to any personal information.
 2. [Disable account session protection](https://create.roblox.com/settings/advanced). This is necessary for the API to work correctly.
 3. Obtain the `.ROBLOSECURITY` cookie value from your browser. This cookie is required for authentication when making API requests.
