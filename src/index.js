@@ -31,11 +31,12 @@ export async function executeLuau(luau, options) {
 
     const placePath = options.place;
     const versionNumber = placePath ? await uploadPlace(context, placePath) : null;
-    return await runCloudLuau({
+    const code = await runCloudLuau({
         executionKey: context.apiKey,
         universeId: context.universeId,
         placeId: context.placeId,
         versionNumber,
         scriptContents,
     });
+    process.exit(code);
 }

@@ -33,3 +33,5 @@ for i, v in pairs(workspace:GetChildren()) do
         warn(message)
     end
 end
+
+return 1 -- Exit code 1

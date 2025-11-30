@@ -27,13 +27,14 @@ local function executeLuau(script)
         })
     end)
 
-    -- Execute the script
-    local success, err = pcall(function()
+    -- Execute the script and capture return value
+    local exitCode = 0
+    local success, result = pcall(function()
         local fn, loadErr = loadstring(script)
         if not fn then
             error("Failed to load script: " .. tostring(loadErr))
         end
-        fn()
+        return fn()
     end)
 
     -- Small delay to ensure all output is captured
@@ -46,9 +47,13 @@ local function executeLuau(script)
     end
 
     if success then
-        sendMessage("complete", { exitCode = 0 })
+        -- Use the returned value as exit code if it's a number
+        if type(result) == "number" then
+            exitCode = result
+        end
+        sendMessage("complete", { exitCode = exitCode })
     else
-        sendMessage("error", { message = tostring(err) })
+        sendMessage("error", { message = tostring(result) })
     end
 end
 

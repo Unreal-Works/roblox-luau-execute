@@ -92,6 +92,8 @@ export async function runCloudLuau({ executionKey, universeId, placeId, placeVer
         taskPath: task.path,
     });
 
+    const parsedExitCode = completedTask.output?.results?.[0];
+
     const logs = await getTaskLogs({
         executionKey,
         taskPath: task.path,
@@ -100,14 +102,14 @@ export async function runCloudLuau({ executionKey, universeId, placeId, placeVer
     analyzeTaskLogs(logs);
 
     if (completedTask.state === "COMPLETE") {
-        return true;
+        return parsedExitCode || 0;
     }
 
     const errorCode = completedTask.error?.code ?? "UNKNOWN";
     const errorMessage = completedTask.error?.message ?? "Luau task failed";
     console.error(`${errorCode} ${errorMessage}`);
     console.error("Luau task failed");
-    return false;
+    return 1;
 }
 
 export async function uploadPlace(context, placeFilePath) {

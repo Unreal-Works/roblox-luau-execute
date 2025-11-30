@@ -67,5 +67,7 @@ Or run the demo TypeScript project:
 npm run build
 ```
 
+Your Luau script can return an exit code by returning a number at the end of the script. For example, returning `1` will set the process exit code to `1`.
+
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
