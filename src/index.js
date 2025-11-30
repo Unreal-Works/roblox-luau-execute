@@ -16,7 +16,8 @@ export async function executeLuau(luau, options) {
 
     // Local mode doesn't require ROBLOSECURITY
     if (options.local) {
-        return await new PlaceRunner({ ...options, scriptContents }).run();
+        const code = await new PlaceRunner({ ...options, scriptContents }).run();
+        process.exit(code);
     }
 
     const { ROBLOSECURITY } = process.env;

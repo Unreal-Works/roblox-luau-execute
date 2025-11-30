@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import { execSync, spawn } from "child_process";
 import fs from "fs";
+import { windowManager } from "node-window-manager";
 import os from "os";
 import path from "path";
 import { WebSocketServer } from "ws";
@@ -64,6 +65,7 @@ export class PlaceRunner {
         this.studioProcess = null;
         /** @type {{ applicationPath: string, pluginsPath: string } | null} */
         this.studioInstall = null;
+        this.minimizeInterval = null;
         this.exitCode = 0;
         this.isRunning = false;
     }
@@ -156,6 +158,11 @@ export class PlaceRunner {
      */
     async stop() {
         this.isRunning = false;
+
+        if (this.minimizeInterval) {
+            clearInterval(this.minimizeInterval);
+            this.minimizeInterval = null;
+        }
 
         if (this.wss) {
             this.wss.close();
@@ -256,6 +263,20 @@ export class PlaceRunner {
                 detached: this.options.noExit,
             });
 
+            this.minimizeInterval = setInterval(() => {
+                for (const window of windowManager.getWindows()) {
+                    if (window.processId === this.studioProcess.pid) {
+                        window.setBounds({
+                            x: -2000,
+                            y: 0,
+                            width: 5,
+                            height: 5,
+                        });
+                        break;
+                    }
+                }
+            }, 50);
+
             if (this.options.noExit) {
                 this.studioProcess.unref();
             }
@@ -264,9 +285,8 @@ export class PlaceRunner {
                 console.error(`Failed to launch Studio: ${err.message}`);
             });
 
-            this.studioProcess.on("exit", (code) => {
+            this.studioProcess.on("exit", () => {
                 if (this.isRunning) {
-                    console.log(`Studio process exited with code ${code}`);
                     this.stop();
                 }
             });
