@@ -14,6 +14,7 @@ program
     .option("-s, --script <path>", "Path to the Luau script file if not provided inline")
     .option("-p, --place <path>", "Path to an optional Roblox place file to execute the script in")
     .option("-l, --local", "Run the Luau script on a local Roblox Studio instance")
+    .option("-o, --out <path>", "Write execution output to a file")
     .argument("[luau]", "Inline Luau code to execute if --script is not provided")
     .action(executeLuau);
 

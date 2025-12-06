@@ -55,7 +55,7 @@ async function getTaskLogs({ executionKey, taskPath }) {
     return response.data;
 }
 
-function analyzeTaskLogs(logs) {
+function analyzeTaskLogs(logs, outputWriter) {
     const groups = logs?.luauExecutionSessionTaskLogs;
     if (!Array.isArray(groups)) {
         return;
@@ -67,12 +67,16 @@ function analyzeTaskLogs(logs) {
         }
 
         for (const raw of entry.messages) {
-            console.log(typeof raw === "string" ? raw : JSON.stringify(raw));
+            const text = typeof raw === "string" ? raw : JSON.stringify(raw);
+            if (outputWriter) {
+                outputWriter.write(text, "info");
+            }
+            console.log(text);
         }
     }
 }
 
-export async function runCloudLuau({ executionKey, universeId, placeId, placeVersion, scriptContents }) {
+export async function runCloudLuau({ executionKey, universeId, placeId, placeVersion, scriptContents, outputWriter }) {
     const headersDefaults = (axios.defaults.headers ||= {});
     const commonHeaders = (headersDefaults.common ||= {});
     if (!commonHeaders["User-Agent"]) {
@@ -99,7 +103,7 @@ export async function runCloudLuau({ executionKey, universeId, placeId, placeVer
         taskPath: task.path,
     });
 
-    analyzeTaskLogs(logs);
+    analyzeTaskLogs(logs, outputWriter);
 
     if (completedTask.state === "COMPLETE") {
         return parsedExitCode || 0;
@@ -107,8 +111,17 @@ export async function runCloudLuau({ executionKey, universeId, placeId, placeVer
 
     const errorCode = completedTask.error?.code ?? "UNKNOWN";
     const errorMessage = completedTask.error?.message ?? "Luau task failed";
-    console.error(`${errorCode} ${errorMessage}`);
-    console.error("Luau task failed");
+    const combined = `${errorCode} ${errorMessage}`;
+    console.error(combined);
+    if (outputWriter) {
+        outputWriter.write(combined, "error");
+    }
+
+    const fallbackMessage = "Luau task failed";
+    console.error(fallbackMessage);
+    if (outputWriter) {
+        outputWriter.write(fallbackMessage, "error");
+    }
     return 1;
 }
 

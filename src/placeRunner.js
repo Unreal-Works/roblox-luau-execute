@@ -7,6 +7,11 @@ import path from "path";
 import { WebSocketServer } from "ws";
 
 /**
+ * @typedef {Object} OutputWriter
+ * @property {(message: string, level?: "info" | "warn" | "error") => void} write
+ */
+
+/**
  * @typedef {Object} PlaceRunnerOptions
  * @property {string} scriptContents - The Luau script contents to execute
  * @property {string} [script] - Path to the original script file (for reference)
@@ -14,6 +19,7 @@ import { WebSocketServer } from "ws";
  * @property {boolean} [oneshot] - Exit after first instance disconnects
  * @property {boolean} [noLaunch] - Don't launch Studio (manage lifecycle externally)
  * @property {boolean} [noExit] - Keep Studio running after program exits
+ * @property {OutputWriter} [outputWriter] - Optional writer for capturing output
  */
 
 /**
@@ -68,6 +74,15 @@ export class PlaceRunner {
         this.minimizeInterval = null;
         this.exitCode = 0;
         this.isRunning = false;
+        this.outputWriter = options.outputWriter || null;
+    }
+
+    record(message, level = "info") {
+        if (!this.outputWriter || !message) {
+            return;
+        }
+
+        this.outputWriter.write(message, level);
     }
 
     /**
@@ -189,7 +204,10 @@ export class PlaceRunner {
         try {
             this.installPlugin();
         } catch (err) {
-            console.error(`Failed to install plugin: ${err.message}`);
+            const reason = err instanceof Error ? err.message : String(err);
+            const message = `Failed to install plugin: ${reason}`;
+            this.record(message, "error");
+            console.error(message);
             return 1;
         }
 
@@ -223,14 +241,19 @@ export class PlaceRunner {
                         // Plugin is ready, resolve the start promise
                         if (resolveStart) resolveStart(true);
                     } else if (message.type === "output") {
+                        const rawText = typeof message.message === "string" ? message.message : JSON.stringify(message.message);
                         let output;
+                        let level = "info";
                         if (message.messageType === "Enum.MessageType.MessageWarning") {
-                            output = chalk.yellow(message.message);
+                            output = chalk.yellow(rawText);
+                            level = "warn";
                         } else if (message.messageType === "Enum.MessageType.MessageError") {
-                            output = chalk.red(message.message);
+                            output = chalk.red(rawText);
+                            level = "error";
                         } else {
-                            output = message.message;
+                            output = rawText;
                         }
+                        this.record(rawText, level);
                         console.log(output);
                     } else if (message.type === "complete") {
                         // Execution complete
@@ -238,13 +261,18 @@ export class PlaceRunner {
                         if (resolveComplete) resolveComplete();
                         this.stop();
                     } else if (message.type === "error") {
-                        console.error(`Execution error: ${message.message}`);
+                        const errorText = `Execution error: ${message.message}`;
+                        this.record(errorText, "error");
+                        console.error(errorText);
                         this.exitCode = 1;
                         if (resolveComplete) resolveComplete();
                         this.stop();
                     }
                 } catch (err) {
-                    console.error(`Failed to parse message: ${err.message}`);
+                    const reason = err instanceof Error ? err.message : String(err);
+                    const parseError = `Failed to parse message: ${reason}`;
+                    this.record(parseError, "error");
+                    console.error(parseError);
                 }
             });
 
@@ -277,7 +305,10 @@ export class PlaceRunner {
             }
 
             this.studioProcess.on("error", (err) => {
-                console.error(`Failed to launch Studio: ${err.message}`);
+                const reason = err instanceof Error ? err.message : String(err);
+                const message = `Failed to launch Studio: ${reason}`;
+                this.record(message, "error");
+                console.error(message);
             });
 
             this.studioProcess.on("exit", () => {
@@ -297,7 +328,9 @@ export class PlaceRunner {
             const result = await Promise.race([startPromise, timeoutPromise]);
 
             if (!result) {
-                console.error("Caught a timeout while waiting for a studio instance to start - do you need to login?");
+                const timeoutMessage = "Caught a timeout while waiting for a studio instance to start - do you need to login?";
+                this.record(timeoutMessage, "error");
+                console.error(timeoutMessage);
                 await this.stop();
                 return 1;
             }

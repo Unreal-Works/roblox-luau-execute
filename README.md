@@ -61,6 +61,12 @@ You can run a Luau script using the provided demo:
 npx rbxluau --script demo/fibonacci.luau
 ```
 
+Capture CLI output to a file using the `--out` option:
+
+```sh
+npx rbxluau --script demo/fibonacci.luau --out logs/fibonacci.log
+```
+
 Or run the demo TypeScript project:
 
 ```sh

@@ -1,42 +1,137 @@
 import fs from "fs";
+import os from "os";
+import path from "path";
 import { getApiContext } from "./apiContext.js";
 import { runCloudLuau, uploadPlace } from "./cloudLuauRunner.js";
 import { PlaceRunner } from "./placeRunner.js";
 
-export async function executeLuau(luau, options) {
-    let scriptContents;
-    if (options.script) {
-        scriptContents = fs.readFileSync(options.script, "utf-8");
-    } else if (luau) {
-        scriptContents = luau;
-    } else {
-        console.error("No Luau script provided. Use --script or provide inline code.");
-        process.exit(1);
+function getCommandOptions(commandOrOptions) {
+    if (commandOrOptions && typeof commandOrOptions.opts === "function") {
+        return commandOrOptions.opts();
+    }
+    return commandOrOptions || {};
+}
+
+function createOutputWriter(outPath) {
+    if (!outPath) {
+        return null;
     }
 
-    const { ROBLOSECURITY } = process.env;
+    const resolvedPath = path.resolve(outPath);
 
-    // Local mode doesn't require ROBLOSECURITY
-    if (options.local || !ROBLOSECURITY) {
-        const code = await new PlaceRunner({ ...options, scriptContents }).run();
-        process.exit(code);
+    try {
+        fs.mkdirSync(path.dirname(resolvedPath), { recursive: true });
+        const stream = fs.createWriteStream(resolvedPath, { flags: "w" });
+
+        return {
+            path: resolvedPath,
+            write(message, level = "info") {
+                if (stream.destroyed || stream.closed || stream.writableEnded) {
+                    return;
+                }
+
+                const prefix = level && level !== "info" ? `[${level.toUpperCase()}] ` : "";
+                const payload = typeof message === "string" ? message : JSON.stringify(message);
+                const lines = payload.split(/\r?\n/);
+                if (lines.length > 0 && lines[lines.length - 1] === "") {
+                    lines.pop();
+                }
+
+                if (lines.length === 0) {
+                    stream.write(`${prefix}${os.EOL}`);
+                } else {
+                    for (const line of lines) {
+                        stream.write(`${prefix}${line}${os.EOL}`);
+                    }
+                }
+            },
+            async close() {
+                if (stream.destroyed || stream.closed || stream.writableEnded) {
+                    return;
+                }
+
+                await new Promise((resolve, reject) => {
+                    stream.end((err) => (err ? reject(err) : resolve()));
+                });
+            },
+        };
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        throw new Error(`Failed to prepare output file at ${resolvedPath}: ${message}`);
+    }
+}
+
+export async function executeLuau(luau, command) {
+    const options = getCommandOptions(command);
+
+    let outputWriter;
+    if (options.out) {
+        try {
+            outputWriter = createOutputWriter(options.out);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            console.error(message);
+            process.exit(1);
+        }
     }
 
-    if (!ROBLOSECURITY) {
-        console.error("ROBLOSECURITY environment variable is not set.");
-        process.exit(1);
+    const record = (message, level = "info") => {
+        if (outputWriter && message) {
+            outputWriter.write(message, level);
+        }
+    };
+
+    let exitCode = 1;
+
+    try {
+        let scriptContents;
+
+        if (options.script) {
+            try {
+                scriptContents = fs.readFileSync(options.script, "utf-8");
+            } catch (err) {
+                const message = err instanceof Error ? err.message : String(err);
+                throw new Error(`Failed to read script at ${options.script}: ${message}`);
+            }
+        } else if (luau) {
+            scriptContents = luau;
+        } else {
+            throw new Error("No Luau script provided. Use --script or provide inline code.");
+        }
+
+        const { ROBLOSECURITY } = process.env;
+
+        if (options.local || !ROBLOSECURITY) {
+            const runnerOptions = { ...options, scriptContents, outputWriter };
+            exitCode = await new PlaceRunner(runnerOptions).run();
+        } else {
+            const context = await getApiContext(ROBLOSECURITY);
+
+            const placePath = options.place;
+            const versionNumber = placePath ? await uploadPlace(context, placePath) : null;
+            exitCode = await runCloudLuau({
+                executionKey: context.apiKey,
+                universeId: context.universeId,
+                placeId: context.placeId,
+                versionNumber,
+                scriptContents,
+                outputWriter,
+            });
+        }
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        record(message, "error");
+        console.error(message);
+        exitCode = 1;
+    } finally {
+        if (outputWriter) {
+            try {
+                await outputWriter.close();
+            } catch (err) {
+                const message = err instanceof Error ? err.message : String(err);
+                console.error(`Failed to close output file: ${message}`);
+            }
+        }
+        process.exit(exitCode);
     }
-
-    const context = await getApiContext(ROBLOSECURITY);
-
-    const placePath = options.place;
-    const versionNumber = placePath ? await uploadPlace(context, placePath) : null;
-    const code = await runCloudLuau({
-        executionKey: context.apiKey,
-        universeId: context.universeId,
-        placeId: context.placeId,
-        versionNumber,
-        scriptContents,
-    });
-    process.exit(code);
 }
