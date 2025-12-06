@@ -19,7 +19,7 @@ Local Execution:
 
 Cloud Execution (CI/CD Pipelines, etc.):
 1. [Create and log into a throwaway Roblox account to use for script execution.](https://www.roblox.com/) Ensure this account has no value and is not linked to any personal information.
-2. [Disable account session protection](https://create.roblox.com/settings/advanced). This is necessary for the API to work correctly.
+2. [Disable account session protection](https://create.roblox.com/settings/advanced). This is necessary for the API to work outside of your local machine.
 3. Obtain the `.ROBLOSECURITY` cookie value from your browser. This cookie is required for authentication when making API requests.
 4. In your project directory, create a `.env` file and add the following line, replacing `your_roblosecurity_cookie` with your actual cookie value:
 
