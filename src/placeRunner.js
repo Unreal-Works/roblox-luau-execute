@@ -266,12 +266,7 @@ export class PlaceRunner {
             this.minimizeInterval = setInterval(() => {
                 for (const window of windowManager.getWindows()) {
                     if (window.processId === this.studioProcess.pid) {
-                        window.setBounds({
-                            x: -2000,
-                            y: 0,
-                            width: window.getBounds().width,
-                            height: window.getBounds().height,
-                        });
+                        window.hide();
                         break;
                     }
                 }
