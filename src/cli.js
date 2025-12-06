@@ -16,6 +16,7 @@ program
     .option("-l, --local", "Run the Luau script on a local Roblox Studio instance")
     .option("-o, --out <path>", "Write execution output to a file")
     .option("--silent", "Suppress Roblox output in the terminal")
+    .option("--no-exit", "Do not call process.exit after completion")
     .argument("[luau]", "Inline Luau code to execute if --script is not provided")
     .action(executeLuau);
 

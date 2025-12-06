@@ -70,6 +70,9 @@ export async function executeLuau(luau, command) {
             outputWriter = createOutputWriter(options.out);
         } catch (err) {
             const message = err instanceof Error ? err.message : String(err);
+            if (options.exit === false) {
+                throw err instanceof Error ? err : new Error(message);
+            }
             console.error(message);
             process.exit(1);
         }
@@ -132,6 +135,9 @@ export async function executeLuau(luau, command) {
                 const message = err instanceof Error ? err.message : String(err);
                 console.error(`Failed to close output file: ${message}`);
             }
+        }
+        if (options.exit === false) {
+            return exitCode;
         }
         process.exit(exitCode);
     }

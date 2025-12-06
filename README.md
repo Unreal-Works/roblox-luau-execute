@@ -67,6 +67,12 @@ Capture CLI output to a file using the `--out` option:
 npx rbxluau --script demo/fibonacci.luau --out logs/fibonacci.log
 ```
 
+Combine `--out` with `--silent` to suppress console logs, and `--no-exit` when embedding the CLI so it resolves without calling `process.exit`:
+
+```sh
+npx rbxluau --script demo/fibonacci.luau --out logs/fibonacci.log --silent --no-exit
+```
+
 Or run the demo TypeScript project:
 
 ```sh
