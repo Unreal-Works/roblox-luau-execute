@@ -55,7 +55,7 @@ async function getTaskLogs({ executionKey, taskPath }) {
     return response.data;
 }
 
-function analyzeTaskLogs(logs, outputWriter) {
+function analyzeTaskLogs(logs, outputWriter, silent) {
     const groups = logs?.luauExecutionSessionTaskLogs;
     if (!Array.isArray(groups)) {
         return;
@@ -71,12 +71,22 @@ function analyzeTaskLogs(logs, outputWriter) {
             if (outputWriter) {
                 outputWriter.write(text, "info");
             }
-            console.log(text);
+            if (!silent) {
+                console.log(text);
+            }
         }
     }
 }
 
-export async function runCloudLuau({ executionKey, universeId, placeId, placeVersion, scriptContents, outputWriter }) {
+export async function runCloudLuau({
+    executionKey,
+    universeId,
+    placeId,
+    placeVersion,
+    scriptContents,
+    outputWriter,
+    silent = false,
+}) {
     const headersDefaults = (axios.defaults.headers ||= {});
     const commonHeaders = (headersDefaults.common ||= {});
     if (!commonHeaders["User-Agent"]) {
@@ -103,7 +113,7 @@ export async function runCloudLuau({ executionKey, universeId, placeId, placeVer
         taskPath: task.path,
     });
 
-    analyzeTaskLogs(logs, outputWriter);
+    analyzeTaskLogs(logs, outputWriter, silent);
 
     if (completedTask.state === "COMPLETE") {
         return parsedExitCode || 0;

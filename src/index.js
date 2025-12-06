@@ -116,6 +116,7 @@ export async function executeLuau(luau, command) {
                 versionNumber,
                 scriptContents,
                 outputWriter,
+                silent: Boolean(options.silent),
             });
         }
     } catch (err) {

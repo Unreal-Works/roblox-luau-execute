@@ -20,6 +20,7 @@ import { WebSocketServer } from "ws";
  * @property {boolean} [noLaunch] - Don't launch Studio (manage lifecycle externally)
  * @property {boolean} [noExit] - Keep Studio running after program exits
  * @property {OutputWriter} [outputWriter] - Optional writer for capturing output
+ * @property {boolean} [silent] - Suppress Roblox output in the terminal
  */
 
 /**
@@ -254,7 +255,9 @@ export class PlaceRunner {
                             output = rawText;
                         }
                         this.record(rawText, level);
-                        console.log(output);
+                        if (!this.options.silent) {
+                            console.log(output);
+                        }
                     } else if (message.type === "complete") {
                         // Execution complete
                         this.exitCode = message.exitCode || 0;
