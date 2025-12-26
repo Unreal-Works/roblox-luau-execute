@@ -1,7 +1,7 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { getApiContext } from "./apiContext.js";
+import { getApiContext } from "roblox-api-keygen";
 import { runCloudLuau, uploadPlace } from "./cloudLuauRunner.js";
 import { PlaceRunner } from "./placeRunner.js";
 
