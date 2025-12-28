@@ -20,7 +20,6 @@
         "dotenv": "^17.2.3",
         "node-window-manager": "^2.2.4",
         "rbx-lune": "^1.0.0",
-        "roblox-api-keygen": "^0.0.1",
         "ws": "^8.18.0"
     },
     "devDependencies": {
