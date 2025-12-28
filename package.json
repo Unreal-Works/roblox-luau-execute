@@ -10,7 +10,7 @@
         "rbxluau": "src/cli.js"
     },
     "scripts": {
-        "test": "vitest",
+        "test": "vitest run",
         "demo": "cd demo && npm run build && cd .. && npx rbxluau --place demo/out/place.rbxl require(game.ReplicatedStorage.src.performDemo)()"
     },
     "dependencies": {
