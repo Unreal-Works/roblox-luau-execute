@@ -5,6 +5,58 @@ import { getApiContext } from "./apiContext.js";
 import { runCloudLuau, uploadPlace } from "./cloudLuauRunner.js";
 import { PlaceRunner } from "./placeRunner.js";
 
+function getNextRoblosecurity() {
+    const { ROBLOSECURITY_POOL, ROBLOSECURITY } = process.env;
+    
+    // If no pool, return single cookie
+    if (!ROBLOSECURITY_POOL) {
+        return ROBLOSECURITY;
+    }
+    
+    // Parse pool
+    const cookies = ROBLOSECURITY_POOL.split(",").map(c => c.trim()).filter(c => c);
+    
+    if (cookies.length === 0) {
+        return ROBLOSECURITY;
+    }
+    
+    if (cookies.length === 1) {
+        return cookies[0];
+    }
+    
+    // Load rotation state
+    const rotationFile = path.join(process.cwd(), ".rbxluau", "rotation.json");
+    let rotationState = { index: 0 };
+    
+    try {
+        if (fs.existsSync(rotationFile)) {
+            const data = fs.readFileSync(rotationFile, "utf-8");
+            rotationState = JSON.parse(data);
+        }
+    } catch (err) {
+        // Use default state
+    }
+    
+    // Get current cookie and increment
+    const currentIndex = rotationState.index % cookies.length;
+    const selectedCookie = cookies[currentIndex];
+    
+    // Save next index
+    rotationState.index = (currentIndex + 1) % cookies.length;
+    
+    try {
+        const dirPath = path.dirname(rotationFile);
+        if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath, { recursive: true });
+        }
+        fs.writeFileSync(rotationFile, JSON.stringify(rotationState), "utf-8");
+    } catch (err) {
+        // Rotation state save failed, but we can still proceed
+    }
+    
+    return selectedCookie;
+}
+
 function getCommandOptions(commandOrOptions) {
     if (commandOrOptions && typeof commandOrOptions.opts === "function") {
         return commandOrOptions.opts();
@@ -102,7 +154,7 @@ export async function executeLuau(luau, command) {
             throw new Error("No Luau script provided. Use --script or provide inline code.");
         }
 
-        const { ROBLOSECURITY } = process.env;
+        const ROBLOSECURITY = getNextRoblosecurity();
 
         if (options.local || !ROBLOSECURITY) {
             const runnerOptions = { ...options, scriptContents, outputWriter };

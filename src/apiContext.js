@@ -1,9 +1,19 @@
 import axios from "axios";
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import getCsrfToken from "./getCsrfToken.js";
 
 const url = "https://apis.roblox.com/cloud-authentication/v1/apiKey";
+
+/**
+ * Creates a short hash identifier for a ROBLOSECURITY cookie.
+ * @param {string} roblosecurity The ROBLOSECURITY cookie value.
+ * @returns {string} A short hash string.
+ */
+function getCookieHash(roblosecurity) {
+    return crypto.createHash("sha256").update(roblosecurity).digest("hex").substring(0, 12);
+}
 
 /**
  * Creates a new API context using the provided ROBLOSECURITY cookie.
@@ -251,9 +261,10 @@ export async function getStarterPlace(context) {
  * @returns {ReturnType<typeof createApiContext>} The API context.
  */
 export async function getApiContext(roblosecurity) {
+    const cookieHash = getCookieHash(roblosecurity);
     let lastLoadContent = null;
     const load = async () => {
-        const filePath = path.join(process.cwd(), ".rbxluau", "credentials.json");
+        const filePath = path.join(process.cwd(), ".rbxluau", `credentials_${cookieHash}.json`);
         if (fs.existsSync(filePath)) {
             const fileData = fs.readFileSync(filePath, { encoding: "utf-8" });
             const apiKeyInfo = JSON.parse(fileData);
@@ -269,19 +280,24 @@ export async function getApiContext(roblosecurity) {
 
     const context = await load();
 
+    if (!context) {
+        throw new Error("Failed to create API context. Please check your ROBLOSECURITY cookie.");
+    }
+
     if (!context.username || !context.placeId || !context.universeId) {
         const starterPlace = await getStarterPlace(context);
-        if (starterPlace) {
-            context.username = starterPlace.username;
-            context.placeId = starterPlace.rootPlaceId;
-            context.universeId = starterPlace.id;
+        if (!starterPlace) {
+            throw new Error("Failed to get starter place. Please ensure you have at least one experience in your account.");
         }
+        context.username = starterPlace.username;
+        context.placeId = starterPlace.rootPlaceId;
+        context.universeId = starterPlace.id;
     }
 
     // Save the context to a file
     const contextString = JSON.stringify(context);
     if (lastLoadContent !== contextString) {
-        const filePath = path.join(process.cwd(), ".rbxluau", "credentials.json");
+        const filePath = path.join(process.cwd(), ".rbxluau", `credentials_${cookieHash}.json`);
         const dirPath = path.dirname(filePath);
         if (!fs.existsSync(dirPath)) {
             fs.mkdirSync(dirPath, { recursive: true });
