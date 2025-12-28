@@ -74,6 +74,7 @@ export class PlaceRunner {
         this.studioInstall = null;
         this.minimizeInterval = null;
         this.exitCode = 0;
+        this.result = null;
         this.isRunning = false;
         this.outputWriter = options.outputWriter || null;
     }
@@ -261,6 +262,7 @@ export class PlaceRunner {
                     } else if (message.type === "complete") {
                         // Execution complete
                         this.exitCode = message.exitCode || 0;
+                        this.result = message.result;
                         if (resolveComplete) resolveComplete();
                         this.stop();
                     } else if (message.type === "error") {
@@ -355,6 +357,10 @@ export class PlaceRunner {
             }, 100);
         });
 
+        // Return result if it's not a number (non-number results should be output)
+        if (this.result !== null && typeof this.result !== "number") {
+            return this.result;
+        }
         return this.exitCode;
     }
 }

@@ -122,6 +122,16 @@ export async function executeLuau(luau, command) {
                 silent: Boolean(options.silent),
             });
         }
+
+        // If exitCode is not a number, treat it as output
+        if (typeof exitCode !== "number") {
+            const output = typeof exitCode === "string" ? exitCode : JSON.stringify(exitCode);
+            record(output);
+            if (!options.silent) {
+                console.log(output);
+            }
+            exitCode = 0;
+        }
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         record(message, "error");

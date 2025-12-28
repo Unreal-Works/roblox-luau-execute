@@ -51,4 +51,36 @@ describe("luau execution", () => {
 
         fs.unlinkSync(outputPath);
     }, 30000);
+
+    it("should handle non-number return values locally", async () => {
+        const outputPath = createOutputPath();
+
+        const exitCode = await rbxluau.executeLuau(`print("hi"); return "test output"`, {
+            local: true,
+            out: outputPath,
+            exit: false,
+        });
+
+        expect(exitCode).toBe(0);
+        const output = fs.readFileSync(outputPath, "utf-8");
+        expect(output).toContain("test output");
+
+        fs.unlinkSync(outputPath);
+    }, 30000);
+
+    it("should handle non-number return values on the cloud", async () => {
+        const outputPath = createOutputPath();
+
+        const exitCode = await rbxluau.executeLuau(`print("hi"); return "test output"`, {
+            local: false,
+            out: outputPath,
+            exit: false,
+        });
+
+        expect(exitCode).toBe(0);
+        const output = fs.readFileSync(outputPath, "utf-8");
+        expect(output).toContain("test output");
+
+        fs.unlinkSync(outputPath);
+    }, 30000);
 });

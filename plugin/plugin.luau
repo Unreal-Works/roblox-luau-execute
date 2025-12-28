@@ -51,7 +51,7 @@ local function executeLuau(script)
         if type(result) == "number" then
             exitCode = result
         end
-        sendMessage("complete", { exitCode = exitCode })
+        sendMessage("complete", { exitCode = exitCode, result = result })
     else
         sendMessage("error", { message = tostring(result) })
     end
