@@ -11,22 +11,24 @@ function getNextRoblosecurity() {
     if (!ROBLOSECURITY) {
         return null;
     }
-    
+
     // Parse pool
-    const cookies = ROBLOSECURITY.split(",").map(c => c.trim()).filter(c => c);
-    
+    const cookies = ROBLOSECURITY.split(",")
+        .map((c) => c.trim())
+        .filter((c) => c);
+
     if (cookies.length === 0) {
         return ROBLOSECURITY;
     }
-    
+
     if (cookies.length === 1) {
         return cookies[0];
     }
-    
+
     // Load rotation state
     const rotationFile = path.join(process.cwd(), ".rbxluau", "rotation.json");
     let rotationState = { index: 0 };
-    
+
     try {
         if (fs.existsSync(rotationFile)) {
             const data = fs.readFileSync(rotationFile, "utf-8");
@@ -35,14 +37,14 @@ function getNextRoblosecurity() {
     } catch (err) {
         // Use default state
     }
-    
+
     // Get current cookie and increment
     const currentIndex = rotationState.index % cookies.length;
     const selectedCookie = cookies[currentIndex];
-    
+
     // Save next index
     rotationState.index = (currentIndex + 1) % cookies.length;
-    
+
     try {
         const dirPath = path.dirname(rotationFile);
         if (!fs.existsSync(dirPath)) {
@@ -52,7 +54,7 @@ function getNextRoblosecurity() {
     } catch (err) {
         // Rotation state save failed, but we can still proceed
     }
-    
+
     return selectedCookie;
 }
 
@@ -171,6 +173,7 @@ export async function executeLuau(luau, command) {
                 scriptContents,
                 outputWriter,
                 silent: Boolean(options.silent),
+                timeout: options.timeout,
             });
         }
 

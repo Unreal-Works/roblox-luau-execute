@@ -1,7 +1,7 @@
 import axios from "axios";
 import fs from "fs";
 
-async function createTask({ executionKey, universeId, placeId, scriptContents, placeVersion }) {
+async function createTask({ executionKey, universeId, placeId, scriptContents, placeVersion, timeout = "60s" }) {
     const baseUrl = `https://apis.roblox.com/cloud/v2/universes/${universeId}/places/${placeId}`;
     const url = placeVersion
         ? `${baseUrl}/versions/${placeVersion}/luau-execution-session-tasks`
@@ -12,7 +12,7 @@ async function createTask({ executionKey, universeId, placeId, scriptContents, p
         url,
         data: {
             script: scriptContents,
-            timeout: "60s",
+            timeout: timeout,
         },
         headers: {
             "x-api-key": executionKey,
@@ -86,6 +86,7 @@ export async function runCloudLuau({
     scriptContents,
     outputWriter,
     silent = false,
+    timeout = "60s",
 }) {
     const headersDefaults = (axios.defaults.headers ||= {});
     const commonHeaders = (headersDefaults.common ||= {});
@@ -99,6 +100,7 @@ export async function runCloudLuau({
         placeId,
         scriptContents,
         placeVersion,
+        timeout,
     });
 
     const completedTask = await pollForTaskCompletion({

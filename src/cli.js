@@ -17,6 +17,7 @@ program
     .option("-o, --out <path>", "Write execution output to a file")
     .option("--silent", "Suppress Roblox output in the terminal")
     .option("--no-exit", "Do not call process.exit after completion")
+    .option("--timeout <duration>", "Set the maximum execution time for cloud runs (e.g., '30s', '2m')", "60s")
     .argument("[luau]", "Inline Luau code to execute if --script is not provided")
     .action(executeLuau);
 
