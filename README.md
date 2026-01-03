@@ -18,20 +18,24 @@ Local Execution:
    ```
 
 Cloud Execution (CI/CD Pipelines, etc.):
-1. [Create and log into a throwaway Roblox account to use for script execution.](https://www.roblox.com/) Ensure this account has no value and is not linked to any personal information.
+1. [Create and log into a throwaway Roblox account to use for script execution on an incognito browser window.](https://www.roblox.com/) Ensure this account has no value and is not linked to any personal information.
 2. [Disable account session protection](https://create.roblox.com/settings/advanced). This is necessary for the API to work outside of your local machine.
-3. Obtain the `.ROBLOSECURITY` cookie value from your browser. This cookie is required for authentication when making API requests.
+3. Obtain the `.ROBLOSECURITY` cookie value from your browser. This cookie is required for authentication when making API requests. Do not log out of this account. Instead, just close the incognito window after obtaining the cookie, as logging out will invalidate the cookie.
 4. In your project directory, create a `.env` file and add the following line, replacing `your_roblosecurity_cookie` with your actual cookie value:
-
    ```env
    ROBLOSECURITY=your_roblosecurity_cookie
    ```
-5. Install roblox-luau-execute via npm:
+5. Additionally, you can also specify multiple cookies by separating them with commas, allowing for load balancing across accounts:
+   ```env
+   ROBLOSECURITY=cookie1,cookie2,cookie3
+   ```
+
+6. Install roblox-luau-execute via npm:
 
    ```sh
    npm install rbxluau
    ```
-6. Start using the package in your Node.js projects!
+7. Start using the package in your Node.js projects!
 
    ```sh
    npx rbxluau "print('Hello, Roblox!')"

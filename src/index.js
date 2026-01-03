@@ -6,15 +6,10 @@ import { runCloudLuau, uploadPlace } from "./cloudLuauRunner.js";
 import { PlaceRunner } from "./placeRunner.js";
 
 function getNextRoblosecurity() {
-    const { ROBLOSECURITY_POOL, ROBLOSECURITY } = process.env;
-    
-    // If no pool, return single cookie
-    if (!ROBLOSECURITY_POOL) {
-        return ROBLOSECURITY;
-    }
+    const { ROBLOSECURITY } = process.env;
     
     // Parse pool
-    const cookies = ROBLOSECURITY_POOL.split(",").map(c => c.trim()).filter(c => c);
+    const cookies = ROBLOSECURITY.split(",").map(c => c.trim()).filter(c => c);
     
     if (cookies.length === 0) {
         return ROBLOSECURITY;
