@@ -7,6 +7,10 @@ import { PlaceRunner } from "./placeRunner.js";
 
 function getNextRoblosecurity() {
     const { ROBLOSECURITY } = process.env;
+
+    if (!ROBLOSECURITY) {
+        return null;
+    }
     
     // Parse pool
     const cookies = ROBLOSECURITY.split(",").map(c => c.trim()).filter(c => c);
