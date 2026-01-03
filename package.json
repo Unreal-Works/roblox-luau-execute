@@ -24,5 +24,9 @@
     },
     "devDependencies": {
         "vitest": "^4.0.15"
-    }
+    },
+    "files": [
+        "src",
+        "plugin"
+    ]
 }
