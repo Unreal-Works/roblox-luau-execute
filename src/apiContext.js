@@ -261,6 +261,24 @@ export async function getStarterPlace(context) {
  * @returns {ReturnType<typeof createApiContext>} The API context.
  */
 export async function getApiContext(roblosecurity) {
+    // Check if roblosecurity is a JSON
+    if (roblosecurity.trim().startsWith("{")) {
+        try {
+            const credentials = JSON.parse(roblosecurity);
+
+            // Multi-credential format
+            const keys = Object.keys(credentials);
+            if (keys.length === 0) {
+                throw new Error("No credentials found in RBXLUAU_CREDENTIALS");
+            }
+            return credentials[keys[rotateApiContext(keys.length)]];
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            throw new Error(`Failed to parse RBXLUAU_CREDENTIALS: ${message}`);
+        }
+    }
+
+    // Load existing credentials from .rbxluau folder if available
     const cookieHash = getCookieHash(roblosecurity);
     let lastLoadContent = null;
     const load = async () => {
@@ -316,4 +334,41 @@ export async function getApiContext(roblosecurity) {
     }
 
     return context;
+}
+
+/**
+ * Rotate API context index for multiple credentials.
+ * @param {number} count The number of available API contexts.
+ * @returns {number} The selected API context index.
+ */
+export function rotateApiContext(count) {
+    // Load rotation state
+    const rotationFile = path.join(process.cwd(), ".rbxluau", "rotation.json");
+    let rotationState = { index: 0 };
+
+    try {
+        if (fs.existsSync(rotationFile)) {
+            const data = fs.readFileSync(rotationFile, "utf-8");
+            rotationState = JSON.parse(data);
+        }
+    } catch (err) {
+        // Use default state
+    }
+
+    // Get current index and increment
+    const currentIndex = rotationState.index % count;
+
+    // Save next index
+    rotationState.index = (currentIndex + 1) % count;
+
+    try {
+        const dirPath = path.dirname(rotationFile);
+        if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath, { recursive: true });
+        }
+        fs.writeFileSync(rotationFile, JSON.stringify(rotationState), "utf-8");
+    } catch (err) {
+        // Rotation state save failed, but we can still proceed
+    }
+    return currentIndex;
 }

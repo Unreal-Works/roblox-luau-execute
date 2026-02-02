@@ -41,6 +41,27 @@ Cloud Execution (CI/CD Pipelines, etc.):
    npx rbxluau "print('Hello, Roblox!')"
    ```
 
+### Alternative: Using Exported Credentials
+
+For CI/CD environments, you can export your credentials on your local machine and use them as an environment variable instead of the ROBLOSECURITY cookie:
+
+1. After running cloud execution at least once (which creates the `.rbxluau` folder), export your credentials:
+   ```sh
+   npx rbxluau export-credentials
+   ```
+
+2. Copy the JSON output and set it as the `RBXLUAU_CREDENTIALS` environment variable:
+   ```env
+   RBXLUAU_CREDENTIALS='...'
+   ```
+
+3. Now you can run scripts without needing ROBLOSECURITY in your environment:
+   ```sh
+   npx rbxluau "print('Hello, Roblox!')"
+   ```
+
+This approach is particularly useful for CI/CD pipelines since ROBLOSECURITY cookies are prone to expiration and also pose security risks if mishandled.
+
 ## Getting Started
 
 ### Prerequisites

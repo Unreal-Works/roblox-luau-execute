@@ -2,7 +2,7 @@
 
 import { Command } from "commander";
 import dotenv from "dotenv";
-import { executeLuau } from "./index.js";
+import { executeLuau, exportCredentials } from "./index.js";
 
 dotenv.config({ quiet: true });
 
@@ -20,5 +20,10 @@ program
     .option("--timeout <duration>", "Set the maximum execution time for cloud runs (e.g., '30s', '2m')", "60s")
     .argument("[luau]", "Inline Luau code to execute if --script is not provided")
     .action(executeLuau);
+
+program
+    .command("export-credentials")
+    .description("Export .rbxluau credentials as JSON for use as RBXLUAU_CREDENTIALS environment variable")
+    .action(exportCredentials);
 
 program.parse();

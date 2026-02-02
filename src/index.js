@@ -1,13 +1,19 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { getApiContext } from "./apiContext.js";
+import { getApiContext, rotateApiContext } from "./apiContext.js";
 import { runCloudLuau, uploadPlace } from "./cloudLuauRunner.js";
 import { PlaceRunner } from "./placeRunner.js";
 
 function getNextRoblosecurity() {
-    const { ROBLOSECURITY } = process.env;
+    const { ROBLOSECURITY, RBXLUAU_CREDENTIALS } = process.env;
 
+    // Send the JSON credentials directly if provided
+    if (RBXLUAU_CREDENTIALS) {
+        return RBXLUAU_CREDENTIALS;
+    }
+
+    // No cookie available
     if (!ROBLOSECURITY) {
         return null;
     }
@@ -25,37 +31,7 @@ function getNextRoblosecurity() {
         return cookies[0];
     }
 
-    // Load rotation state
-    const rotationFile = path.join(process.cwd(), ".rbxluau", "rotation.json");
-    let rotationState = { index: 0 };
-
-    try {
-        if (fs.existsSync(rotationFile)) {
-            const data = fs.readFileSync(rotationFile, "utf-8");
-            rotationState = JSON.parse(data);
-        }
-    } catch (err) {
-        // Use default state
-    }
-
-    // Get current cookie and increment
-    const currentIndex = rotationState.index % cookies.length;
-    const selectedCookie = cookies[currentIndex];
-
-    // Save next index
-    rotationState.index = (currentIndex + 1) % cookies.length;
-
-    try {
-        const dirPath = path.dirname(rotationFile);
-        if (!fs.existsSync(dirPath)) {
-            fs.mkdirSync(dirPath, { recursive: true });
-        }
-        fs.writeFileSync(rotationFile, JSON.stringify(rotationState), "utf-8");
-    } catch (err) {
-        // Rotation state save failed, but we can still proceed
-    }
-
-    return selectedCookie;
+    return cookies[rotateApiContext(cookies.length)];
 }
 
 function getCommandOptions(commandOrOptions) {
@@ -204,5 +180,52 @@ export async function executeLuau(luau, command) {
             return exitCode;
         }
         process.exit(exitCode);
+    }
+}
+
+/**
+ * Export credentials from .rbxluau folder as JSON.
+ */
+export async function exportCredentials() {
+    try {
+        const rbxluauDir = path.join(process.cwd(), ".rbxluau");
+
+        if (!fs.existsSync(rbxluauDir)) {
+            console.error("No .rbxluau directory found. Please run a cloud execution first to create credentials.");
+            process.exit(1);
+        }
+
+        // Find all credential files
+        const files = fs.readdirSync(rbxluauDir);
+        const credentialFiles = files.filter((f) => f.startsWith("credentials_") && f.endsWith(".json"));
+
+        if (credentialFiles.length === 0) {
+            console.error("No credential files found in .rbxluau directory.");
+            process.exit(1);
+        }
+
+        // Read all credentials
+        const exportData = {};
+        for (const file of credentialFiles) {
+            const filePath = path.join(rbxluauDir, file);
+            const data = fs.readFileSync(filePath, "utf-8");
+            const credentials = JSON.parse(data);
+
+            // Use a hash or identifier as key
+            const key = file.replace("credentials_", "").replace(".json", "");
+            credentials.roblosecurity = "[REDACTED]";
+            exportData[key] = credentials;
+        }
+
+        const jsonString = JSON.stringify(exportData);
+        const outPath = path.join(rbxluauDir, "exported_credentials.json");
+        fs.writeFileSync(outPath, jsonString, "utf-8");
+        console.log(`Exported credentials to ${path.resolve(outPath)}`);
+
+        process.exit(0);
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`Failed to export credentials: ${message}`);
+        process.exit(1);
     }
 }
