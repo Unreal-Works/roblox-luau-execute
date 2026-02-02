@@ -1,7 +1,6 @@
 import chalk from "chalk";
 import { execSync, spawn } from "child_process";
 import fs from "fs";
-import { windowManager } from "node-window-manager";
 import os from "os";
 import path from "path";
 import { WebSocketServer } from "ws";
@@ -243,7 +242,8 @@ export class PlaceRunner {
                         // Plugin is ready, resolve the start promise
                         if (resolveStart) resolveStart(true);
                     } else if (message.type === "output") {
-                        const rawText = typeof message.message === "string" ? message.message : JSON.stringify(message.message);
+                        const rawText =
+                            typeof message.message === "string" ? message.message : JSON.stringify(message.message);
                         let output;
                         let level = "info";
                         if (message.messageType === "Enum.MessageType.MessageWarning") {
@@ -296,14 +296,21 @@ export class PlaceRunner {
                 detached: this.options.noExit,
             });
 
-            this.minimizeInterval = setInterval(() => {
-                for (const window of windowManager.getWindows()) {
-                    if (window.processId === this.studioProcess.pid) {
-                        window.hide();
-                        break;
+            try {
+                const windowManager = (await import("node-window-manager")).windowManager;
+                this.minimizeInterval = setInterval(() => {
+                    for (const window of windowManager.getWindows()) {
+                        if (window.processId === this.studioProcess.pid) {
+                            window.hide();
+                            break;
+                        }
                     }
-                }
-            }, 50);
+                }, 50);
+            } catch {
+                console.warn(
+                    "Could not import 'node-window-manager'; Studio window will not be minimized. Install the package for this feature.",
+                );
+            }
 
             if (this.options.noExit) {
                 this.studioProcess.unref();
@@ -333,7 +340,8 @@ export class PlaceRunner {
             const result = await Promise.race([startPromise, timeoutPromise]);
 
             if (!result) {
-                const timeoutMessage = "Caught a timeout while waiting for a studio instance to start - do you need to login?";
+                const timeoutMessage =
+                    "Caught a timeout while waiting for a studio instance to start - do you need to login?";
                 this.record(timeoutMessage, "error");
                 console.error(timeoutMessage);
                 await this.stop();
